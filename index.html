@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>28x28 Pixel Art Canvas</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #f0f2f5;
+        padding: 20px;
+      }
+      canvas {
+        border: 2px solid #333;
+        width: 560px;
+        height: 560px;
+        image-rendering: pixelated;
+        cursor: crosshair;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .controls {
+        margin-top: 20px;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #predict-text {
+        font-size: 2.4rem;
+        font-style: italic;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script defer type="module" src="index.js"></script>
+  </head>
+  <body>
+    <p>
+      Ryland's MNIST Neural Network. Built with pytorch and trained on the pytorch MNIST dataset,
+      this ai has a 97% accuracy to guess number. Please draw them in the center.
+    </p>
+    <canvas id="pixelCanvas" width="28" height="28"></canvas>
+
+    <div class="controls">
+      <button id="clearBtn">Clear Canvas</button>
+      <button id="predictBtn">Predict Digit</button>
+    </div>
+    <p>AI PREDICTION: <span id="predict-text">NIL</span></p>
+    <p>
+      This AI is a Convolutional Neural Network built using PyTorch tensors. Instead of flattening
+      images directly, it processes 28 * 28 pixel images through 4 main layers—two 2D convolutional
+      layers for feature extraction and two fully connected layers for final classification. It uses
+      a Supervised Learning approach trained on labeled digit data. Training relies on Cross Entropy
+      Loss and backpropagation via the Adam optimizer to adjust neuron weights and optimize
+      predictions.
+    </p>
+
+    <script>
+      const canvas = document.getElementById('pixelCanvas');
+      const ctx = canvas.getContext('2d');
+      const clearBtn = document.getElementById('clearBtn');
+
+      let isDrawing = false;
+
+      function drawPixel(x, y, opacity) {
+        if (x < 0 || x >= 28 || y < 0 || y >= 28) return;
+        ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+        ctx.fillRect(x, y, 1, 1);
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+
+        const eventTarget = e.touches ? e.touches[0] : e;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = Math.floor((eventTarget.clientX - rect.left) * scaleX);
+        const y = Math.floor((eventTarget.clientY - rect.top) * scaleY);
+
+        drawPixel(x, y, 1.0);
+
+        drawPixel(x - 1, y, 0.6);
+        drawPixel(x + 1, y, 0.6);
+        drawPixel(x, y - 1, 0.6);
+        drawPixel(x, y + 1, 0.6);
+
+        drawPixel(x - 1, y - 1, 0.3);
+        drawPixel(x + 1, y - 1, 0.3);
+        drawPixel(x - 1, y + 1, 0.3);
+        drawPixel(x + 1, y + 1, 0.3);
+      }
+
+      canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        draw(e);
+      });
+      window.addEventListener('mouseup', () => (isDrawing = false));
+      canvas.addEventListener('mousemove', draw);
+
+      canvas.addEventListener('touchstart', (e) => {
+        isDrawing = true;
+        draw(e);
+        e.preventDefault();
+      });
+      window.addEventListener('touchend', () => (isDrawing = false));
+      canvas.addEventListener('touchmove', (e) => {
+        draw(e);
+        e.preventDefault();
+      });
+
+      clearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
+    </script>
+  </body>
+</html>
